@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-slate-200 antialiased;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% -10%, rgba(34, 211, 238, 0.08), transparent),
+    radial-gradient(ellipse 40% 30% at 90% 10%, rgba(167, 139, 250, 0.06), transparent);
+  background-attachment: fixed;
+}
+
+/* 科技网格背景 */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 通用卡片 */
+.panel {
+  @apply rounded-2xl border border-bg-border bg-bg-card/80 backdrop-blur;
+}
+
+/* 回答正文排版 */
+.prose-dark {
+  @apply text-[13.5px] leading-relaxed text-slate-300;
+}
+.prose-dark p {
+  @apply my-2;
+}
+.prose-dark h1,
+.prose-dark h2,
+.prose-dark h3,
+.prose-dark h4 {
+  @apply mt-4 mb-2 font-semibold text-slate-100;
+}
+.prose-dark h1 { @apply text-lg; }
+.prose-dark h2 { @apply text-base; }
+.prose-dark h3 { @apply text-[15px]; }
+.prose-dark h4 { @apply text-sm; }
+.prose-dark ul,
+.prose-dark ol {
+  @apply my-2 pl-5 space-y-1;
+}
+.prose-dark ul { @apply list-disc; }
+.prose-dark ol { @apply list-decimal; }
+.prose-dark li { @apply my-0.5; }
+.prose-dark code {
+  @apply rounded bg-slate-800/80 px-1.5 py-0.5 font-mono text-[12px] text-accent-soft;
+}
+.prose-dark pre {
+  @apply my-3 rounded-xl border border-bg-border bg-black/40 p-3 overflow-x-auto;
+}
+.prose-dark pre code {
+  @apply bg-transparent p-0 text-[12px] leading-relaxed text-emerald-300;
+}
+.prose-dark blockquote {
+  @apply my-3 border-l-2 border-accent-dim pl-3 text-slate-400;
+}
+.prose-dark table {
+  @apply my-3 w-full border-collapse text-[12.5px];
+}
+.prose-dark th,
+.prose-dark td {
+  @apply border border-bg-border px-2 py-1.5 text-left;
+}
+.prose-dark th {
+  @apply bg-slate-800/50 font-medium text-slate-200;
+}
+.prose-dark strong {
+  @apply text-slate-100;
+}
+
+/* 打字光标 */
+.cursor-blink::after {
+  content: "▍";
+  @apply text-accent animate-blink;
+}
+
+/* 渐变标题 */
+.gradient-text {
+  @apply bg-gradient-to-r from-accent via-accent-soft to-neon-purple bg-clip-text text-transparent;
+}
