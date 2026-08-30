@@ -1,14 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["hkg1"],
-  "functions": {
-    "app/api/compare/route.ts": {
-      "maxDuration": 120,
-      "runtime": "edge"
-    },
-    "app/api/benchmark/route.ts": {
-      "maxDuration": 300,
-      "runtime": "edge"
-    }
-  }
+  "regions": ["hkg1"]
 }
