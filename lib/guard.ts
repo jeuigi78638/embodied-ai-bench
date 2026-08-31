@@ -124,7 +124,7 @@ export function guardRequest(
     return {
       ok: false,
       status: 400,
-      message: `单次最多对比 ${MAX_MODELS} 个模型，请减少选择`,
+      message: `单次最多选择 ${MAX_MODELS} 个模型，请减少选择`,
     };
   }
   if (extra.tasksCount !== undefined && extra.tasksCount > MAX_TASKS) {
