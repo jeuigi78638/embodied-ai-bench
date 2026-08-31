@@ -8,6 +8,7 @@
 import { MODELS, MODEL_MAP, DEFAULT_SYSTEM_PROMPT } from "@/lib/models";
 import { streamModel, type ChatMessage } from "@/lib/providers";
 import { mergeStreams } from "@/lib/sse";
+import { guardRequest, guardJson } from "@/lib/guard";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,13 @@ export async function POST(req: Request) {
     selectedIds.length > 0
       ? selectedIds.filter((id) => MODEL_MAP[id])
       : MODELS.map((m) => m.id);
+
+  // 防护层：来源白名单 + IP 限流 + 参数上限
+  const guard = guardRequest(req, "compare", {
+    modelsCount: ids.length,
+    promptLen: prompt.length,
+  });
+  if (!guard.ok) return guardJson(guard.message, guard.status);
 
   const messages: ChatMessage[] = [
     { role: "system", content: systemPrompt },

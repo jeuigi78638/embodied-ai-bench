@@ -9,6 +9,7 @@ import { MODELS, MODEL_MAP, DEFAULT_SYSTEM_PROMPT } from "@/lib/models";
 import { BENCHMARK_TASKS } from "@/lib/benchmarks";
 import { completeModel, type ChatMessage } from "@/lib/providers";
 import { scoreAnswer, scoreGrade } from "@/lib/scoring";
+import { guardRequest, guardJson } from "@/lib/guard";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,13 @@ export async function POST(req: Request) {
   const tasks = (taskIds.length > 0 ? taskIds : BENCHMARK_TASKS.map((t) => t.id))
     .map((id) => BENCHMARK_TASKS.find((t) => t.id === id))
     .filter((t): t is NonNullable<typeof t> => Boolean(t));
+
+  // 防护层：来源白名单 + IP 限流 + 参数上限（评测成本高，限制更严）
+  const guard = guardRequest(req, "benchmark", {
+    modelsCount: models.length,
+    tasksCount: tasks.length,
+  });
+  if (!guard.ok) return guardJson(guard.message, guard.status);
 
   // 各模型并行，逐题顺序作答
   const perModel = await Promise.all(
