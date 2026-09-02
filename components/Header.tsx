@@ -8,6 +8,7 @@ const NAV = [
   { href: "#radar", label: "选型雷达" },
   { href: "#decision", label: "选型决策" },
   { href: "#cost", label: "成本速查" },
+  { href: "#keys", label: "API Key" },
   { href: "#community", label: "机器人社区" },
 ];
 

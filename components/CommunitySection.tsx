@@ -13,6 +13,7 @@ import {
 } from "@/lib/community";
 import { MODEL_MAP } from "@/lib/models";
 import { buildDemoAnswer } from "@/lib/demo";
+import { getUserKeys } from "@/lib/userkeys";
 import Markdown from "./Markdown";
 
 const CAT_STYLE: Record<TopicCategory, string> = {
@@ -128,7 +129,11 @@ function AiPanel({ onClose }: AiPanelProps) {
       const res = await fetch("/api/compare", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: text, models: ["deepseek"] }),
+        body: JSON.stringify({
+          prompt: text,
+          models: ["deepseek"],
+          userKeys: getUserKeys(),
+        }),
       });
       const raw = await res.text();
       for (const line of raw.split("\n")) {

@@ -16,12 +16,15 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
-  let body: { models?: unknown; tasks?: unknown };
+  let body: { models?: unknown; tasks?: unknown; userKeys?: unknown };
   try {
     body = await req.json();
   } catch {
     return json({ error: "请求体不是合法 JSON" }, 400);
   }
+
+  // BYOK：解析用户请求时自带的 Key（envKey -> key），只用不存、不写日志
+  const userKeys = parseUserKeys(body.userKeys);
 
   const modelIds = Array.isArray(body.models)
     ? body.models.filter((id): id is string => typeof id === "string")
@@ -59,6 +62,7 @@ export async function POST(req: Request) {
         const startedAt = Date.now();
         const { text, error } = await completeModel(model, messages, {
           maxTokens: 1600,
+          apiKey: userKeys[model.envKey],
         });
         const score = error ? null : scoreAnswer(task, text);
         items.push({
@@ -117,4 +121,21 @@ function json(data: unknown, status: number) {
     status,
     headers: { "content-type": "application/json; charset=utf-8" },
   });
+}
+
+/**
+ * 严格解析用户自带的 Key：只接受「合法环境变量名 -> 短字符串」，
+ * 拒绝异常值，防止注入；Key 仅用于本次请求，不落盘不写日志。
+ */
+function parseUserKeys(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof v !== "string") continue;
+    const val = v.trim();
+    if (!val || val.length > 256) continue;
+    if (!/^[A-Za-z0-9_]{2,64}$/.test(k)) continue;
+    out[k] = val;
+  }
+  return out;
 }

@@ -6,6 +6,7 @@ import { BENCHMARK_TASKS } from "@/lib/benchmarks";
 import { scoreGrade, scoreAnswer } from "@/lib/scoring";
 import { buildDemoAnswer, demoLatency } from "@/lib/demo";
 import { setBenchRecord } from "@/lib/store";
+import { getUserKeys } from "@/lib/userkeys";
 import Markdown from "./Markdown";
 
 interface AnswerItem {
@@ -92,7 +93,11 @@ export default function BenchmarkSection() {
       const res = await fetch("/api/benchmark", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ models: [...models], prompt }),
+        body: JSON.stringify({
+          models: [...models],
+          prompt,
+          userKeys: getUserKeys(),
+        }),
       });
       if (!res.ok) {
         let msg = `请求失败 HTTP ${res.status}`;

@@ -12,6 +12,7 @@ import {
 import ModelCard, { type CardState } from "./ModelCard";
 import { streamDemo } from "@/lib/demo";
 import { setCompareRecord } from "@/lib/store";
+import { getUserKeys } from "@/lib/userkeys";
 
 type Filter = "all" | "国产" | "国际";
 
@@ -154,6 +155,7 @@ export default function CompareWorkbench() {
           prompt: prompt.trim(),
           systemPrompt: finalSystem,
           models: [...selected],
+          userKeys: getUserKeys(),
         }),
       });
 
@@ -462,8 +464,8 @@ export default function CompareWorkbench() {
             {demo && (
               <div className="rounded-xl border border-amber-400/30 bg-amber-400/8 px-4 py-2.5 text-[12px] leading-relaxed text-amber-300">
                 🎮 当前为<strong>演示模式</strong>：回答由本地模拟生成，用于预览界面与完整流程。
-                在 <code className="rounded bg-black/40 px-1 font-mono">.env.local</code> 或 Vercel 环境变量中配置任一模型的
-                API Key 后，取消勾选「演示模式」即可切换为真实模型并发输出。
+                在 <a href="#keys" className="underline decoration-dotted underline-offset-2 hover:text-amber-200">「API Key」设置</a> 中填入你自己的 Key 后，
+                取消勾选「演示模式」即可切换为真实模型并发输出（BYOK，费用用你自己的额度）。
               </div>
             )}
 

@@ -18,6 +18,8 @@ export interface StreamOpts {
   temperature?: number;
   maxTokens?: number;
   signal?: AbortSignal;
+  /** BYOK：用户请求时自带的 Key，优先于服务端环境变量；只用不存 */
+  apiKey?: string;
 }
 
 const baseHeaders = { "content-type": "application/json" };
@@ -36,10 +38,10 @@ export async function* streamModel(
   messages: ChatMessage[],
   opts: StreamOpts = {}
 ): AsyncGenerator<string> {
-  const apiKey = process.env[config.envKey];
+  const apiKey = (opts.apiKey && opts.apiKey.trim()) || process.env[config.envKey];
   if (!apiKey) {
     throw new Error(
-      `缺少 ${config.envKey}：该模型尚未配置 API Key，请在 .env.local / Vercel 环境变量中添加。`
+      `缺少 ${config.envKey}：该模型尚未配置 API Key。请在右上角「API Key」设置中填入你自己的 Key（BYOK），或由管理员在 Vercel 环境变量中配置。`
     );
   }
   const temperature =
