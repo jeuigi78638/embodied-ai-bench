@@ -10,6 +10,7 @@ const NAV = [
   { href: "#cost", label: "成本速查" },
   { href: "#keys", label: "API Key" },
   { href: "#community", label: "机器人社区" },
+  { href: "#workshop", label: "机器人构建" },
 ];
 
 export default function Header() {

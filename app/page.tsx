@@ -7,6 +7,7 @@ import DecisionHelper from "@/components/DecisionHelper";
 import CostSection from "@/components/CostSection";
 import KeySettings from "@/components/KeySettings";
 import CommunitySection from "@/components/CommunitySection";
+import RobotWorkshop from "@/components/RobotWorkshop";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -39,6 +40,10 @@ export default function Home() {
         <div className="h-px bg-gradient-to-r from-transparent via-bg-border to-transparent" />
       </div>
       <CommunitySection />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-bg-border to-transparent" />
+      </div>
+      <RobotWorkshop />
       <Footer />
     </main>
   );
