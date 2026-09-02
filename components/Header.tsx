@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "#workbench", label: "对比工作台" },
-  { href: "#benchmark", label: "具身评测" },
+  { href: "#benchmark", label: "自助测评" },
   { href: "#radar", label: "选型雷达" },
   { href: "#decision", label: "选型决策" },
   { href: "#cost", label: "成本速查" },

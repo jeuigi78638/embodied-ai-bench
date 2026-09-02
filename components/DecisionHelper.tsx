@@ -5,7 +5,7 @@ import { MODELS, type RadarScores } from "@/lib/models";
 import { useReportStore } from "@/lib/store";
 
 // ============================================================
-// ⑤ 具身模型选型决策助手
+// ④ 具身模型选型决策助手
 // 输入：机器人类型 / 核心任务 / 实时频率 / 预算敏感度 / 每日时长
 // 输出：推荐模型 Top3 + 理由 + 每日成本测算 + 可复制的选型报告
 // 纯前端计算（基于模型能力维度 + 官方参考价），无需 API Key。
@@ -229,7 +229,7 @@ export default function DecisionHelper() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-slate-100 sm:text-2xl">
-            ⑤ 具身模型选型决策助手
+            ④ 具身模型选型决策助手
           </h2>
           <p className="mt-1 text-[13px] text-slate-500">
             回答 4 个场景问题，直接给你<strong className="text-accent-soft">推荐模型 Top3 + 每日成本测算 + 选型报告</strong>。
