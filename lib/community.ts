@@ -292,3 +292,81 @@ export function demoSummarize(title: string, content: string): string {
   if (t.length <= 24) return t;
   return t.slice(0, 24) + "…";
 }
+
+// ---------- 云端同步（登录后走 /api/posts） ----------
+
+interface CloudPost {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  author: string;
+  avatar?: string;
+  aiSummary?: string;
+  likes: string[];
+  comments: Comment[];
+  isSeed?: boolean;
+  createdAt: number;
+}
+
+/** 云端帖子 → 前端 Post（likes 数 = 数组长度） */
+function fromCloud(p: CloudPost): Post {
+  return {
+    id: p.id,
+    title: p.title,
+    content: p.content,
+    category: (CATEGORIES as string[]).includes(p.category)
+      ? (p.category as TopicCategory)
+      : "自由闲聊",
+    author: p.author || "机器人玩家",
+    createdAt: p.createdAt,
+    likes: Array.isArray(p.likes) ? p.likes.length : 0,
+    liked: false,
+    aiSummary: p.aiSummary,
+    isSeed: Boolean(p.isSeed),
+    comments: Array.isArray(p.comments) ? p.comments : [],
+  };
+}
+
+export async function loadCloudPosts(): Promise<Post[] | null> {
+  try {
+    const res = await fetch("/api/posts");
+    const j = await res.json();
+    if (j?.ok && Array.isArray(j.posts)) {
+      return (j.posts as CloudPost[]).map(fromCloud);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** 前端 Post → 云端（likes 数转为数组长度） */
+export async function saveCloudPost(post: Post): Promise<boolean> {
+  try {
+    const likesArr: string[] = [];
+    for (let i = 0; i < (post.likes || 0); i++) likesArr.push(`u${i}`);
+    if (post.liked) likesArr.push("me");
+    const body = {
+      id: post.id,
+      title: post.title,
+      category: post.category,
+      content: post.content,
+      author: post.author,
+      avatar: "🤖",
+      aiSummary: post.aiSummary ?? "",
+      likes: likesArr,
+      comments: post.comments ?? [],
+      createdAt: post.createdAt,
+    };
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json();
+    return Boolean(j?.ok);
+  } catch {
+    return false;
+  }
+}

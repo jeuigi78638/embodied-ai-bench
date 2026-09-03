@@ -114,6 +114,44 @@ export function deleteRobot(id: string): Robot[] {
   }
 }
 
+// ---------- 云端同步（登录后走 /api/robots，未登录回退本地） ----------
+export async function loadCloudRobots(): Promise<Robot[] | null> {
+  try {
+    const res = await fetch("/api/robots");
+    const j = await res.json();
+    if (j?.ok && Array.isArray(j.robots)) return j.robots as Robot[];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveCloudRobot(robot: Robot): Promise<boolean> {
+  try {
+    const res = await fetch("/api/robots", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(robot),
+    });
+    const j = await res.json();
+    return Boolean(j?.ok);
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteCloudRobot(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/robots?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const j = await res.json();
+    return Boolean(j?.ok);
+  } catch {
+    return false;
+  }
+}
+
 export const DEFAULT_ROBOT: Robot = {
   id: "r_default_arm",
   name: "老张·机械臂",

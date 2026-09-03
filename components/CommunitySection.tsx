@@ -5,6 +5,8 @@ import {
   CATEGORIES,
   loadPosts,
   savePosts,
+  loadCloudPosts,
+  saveCloudPost,
   genId,
   demoSummarize,
   type Post,
@@ -14,6 +16,7 @@ import {
 import { MODEL_MAP } from "@/lib/models";
 import { buildDemoAnswer } from "@/lib/demo";
 import { getUserKeys } from "@/lib/userkeys";
+import { useAuth } from "./AuthContext";
 import Markdown from "./Markdown";
 
 const CAT_STYLE: Record<TopicCategory, string> = {
@@ -226,6 +229,7 @@ function AiPanel({ onClose }: AiPanelProps) {
 }
 
 export default function CommunitySection() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [activeCat, setActiveCat] = useState<TopicCategory | "全部">("全部");
   const [showComposer, setShowComposer] = useState(false);
@@ -233,12 +237,41 @@ export default function CommunitySection() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setPosts(loadPosts());
-  }, []);
+    let cancelled = false;
+    if (user) {
+      // 登录：云端帖子 + 本地种子合并
+      Promise.all([loadCloudPosts(), Promise.resolve(loadPosts())]).then(
+        ([cloud, local]) => {
+          if (cancelled) return;
+          if (cloud && cloud.length > 0) {
+            const seeds = local.filter((p) => p.isSeed);
+            const cloudIds = new Set(cloud.map((p) => p.id));
+            setPosts([...cloud, ...seeds.filter((p) => !cloudIds.has(p.id))]);
+          } else {
+            setPosts(local);
+          }
+        }
+      );
+    } else {
+      setPosts(loadPosts());
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const persist = (next: Post[]) => {
     setPosts(next);
-    savePosts(next);
+    if (user) {
+      // 登录：非种子帖子全部上云（新建/点赞/评论都全量同步）
+      next
+        .filter((p) => !p.isSeed)
+        .forEach((p) => {
+          void saveCloudPost(p);
+        });
+    } else {
+      savePosts(next);
+    }
   };
 
   const toggleLike = (id: string) => {
@@ -255,7 +288,7 @@ export default function CommunitySection() {
       title,
       content,
       category: cat,
-      author: "我",
+      author: user?.nickname || "我",
       createdAt: Date.now(),
       likes: 0,
       liked: false,
@@ -268,7 +301,12 @@ export default function CommunitySection() {
   };
 
   const addComment = (postId: string, text: string) => {
-    const c: Comment = { id: genId(), author: "我", content: text, createdAt: Date.now() };
+    const c: Comment = {
+      id: genId(),
+      author: user?.nickname || "我",
+      content: text,
+      createdAt: Date.now(),
+    };
     persist(posts.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, c] } : p)));
   };
 
@@ -300,8 +338,17 @@ export default function CommunitySection() {
           </h2>
           <p className="mt-1 text-[13px] text-slate-500">
             具身智能 × 机器人大众社区：行业动态、技术问答、产品讨论、学习求职，随时开聊。
-            <span className="text-amber-400/90"> 当前为本地演示数据</span>
-            （数据存于浏览器，后续接入真实社区后端）。
+            {user ? (
+              <span className="text-emerald-400/90">
+                {" "}
+                已登录 · 帖子云端同步，换设备不丢失
+              </span>
+            ) : (
+              <span className="text-amber-400/90">
+                {" "}
+                未登录 · 数据存于本浏览器（登录后云端同步）
+              </span>
+            )}
           </p>
         </div>
 

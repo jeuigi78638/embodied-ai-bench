@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MODELS, MODEL_MAP } from "@/lib/models";
 import { buildDemoAnswer } from "@/lib/demo";
 import { getUserKeys } from "@/lib/userkeys";
@@ -14,7 +14,11 @@ import {
   loadRobots,
   saveRobot,
   deleteRobot,
+  loadCloudRobots,
+  saveCloudRobot,
+  deleteCloudRobot,
 } from "@/lib/robots";
+import { useAuth } from "./AuthContext";
 import Markdown from "./Markdown";
 
 const AVATARS = ["🤖", "🦾", "🛠", "🧠", "🔬", "🛰", "🤝", "⚙️"];
@@ -26,8 +30,25 @@ interface Msg {
 }
 
 export default function RobotWorkshop() {
+  const { user, loading: authLoading } = useAuth();
   const [view, setView] = useState<View>("list");
   const [robots, setRobots] = useState<Robot[]>(() => loadRobots());
+
+  // 登录后：从云端加载机器人；未登录：本地数据
+  useEffect(() => {
+    let cancelled = false;
+    if (user) {
+      loadCloudRobots().then((cloud) => {
+        if (cancelled) return;
+        if (cloud && cloud.length > 0) setRobots(cloud);
+      });
+    } else {
+      setRobots(loadRobots());
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // builder
   const [editing, setEditing] = useState<Robot | null>(null);
@@ -110,7 +131,19 @@ export default function RobotWorkshop() {
         buildSystemPrompt(n, role, [...skills], style),
       createdAt: editing?.createdAt ?? Date.now(),
     };
-    setRobots(saveRobot(robot));
+    if (user) {
+      void saveCloudRobot(robot).then((ok) => {
+        if (ok) {
+          void loadCloudRobots().then((list) => {
+            if (list && list.length > 0) setRobots(list);
+          });
+        } else {
+          setBuilderErr("云保存失败，请确认已登录");
+        }
+      });
+    } else {
+      setRobots(saveRobot(robot));
+    }
     setView("list");
   };
 
@@ -124,7 +157,13 @@ export default function RobotWorkshop() {
 
   const remove = (id: string) => {
     if (window.confirm("确定删除这个机器人吗？")) {
-      setRobots(deleteRobot(id));
+      if (user) {
+        void deleteCloudRobot(id).then((ok) => {
+          if (ok) setRobots((prev) => prev.filter((r) => r.id !== id));
+        });
+      } else {
+        setRobots(deleteRobot(id));
+      }
     }
   };
 
@@ -220,6 +259,11 @@ export default function RobotWorkshop() {
                 ＋ 新建机器人
               </button>
             </div>
+            {!user && (
+              <div className="mb-3 rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 text-[12px] text-slate-400">
+                💡 当前为<strong>本地模式</strong>（数据存此浏览器）。登录后机器人云端同步、换设备不丢失。
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {robots.map((r) => {
                 const cfg = MODEL_MAP[r.model];

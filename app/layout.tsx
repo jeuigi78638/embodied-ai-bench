@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthContext";
 
 export const metadata: Metadata = {
   title: "具身智衡 EAI-Bench · 多模型 × 具身智能实时评测工作台",
@@ -38,7 +39,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
