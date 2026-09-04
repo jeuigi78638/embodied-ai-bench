@@ -1,7 +1,8 @@
 // ============================================================
 // app/api/posts/route.ts — 社区帖子云同步
-// GET  → 全部帖子（公开，按创建时间倒序）
-// POST → 新建 / 更新帖子（含点赞、评论，客户端提交最新状态）
+// GET    → 全部帖子（公开，按创建时间倒序；登录时标注 owner）
+// POST   → 新建 / 更新帖子（含点赞、评论，客户端提交最新状态）
+// DELETE → 删除帖子（仅作者本人，?id=xxx）
 // ============================================================
 
 import { NextRequest } from "next/server";
@@ -17,7 +18,7 @@ async function currentUser(req: NextRequest) {
   return verifyToken(token);
 }
 
-function mapPost(r: Record<string, unknown>) {
+function mapPost(r: Record<string, unknown>, uid?: string) {
   return {
     id: r.id,
     title: r.title,
@@ -29,16 +30,22 @@ function mapPost(r: Record<string, unknown>) {
     likes: Array.isArray(r.likes) ? r.likes : [],
     comments: Array.isArray(r.comments) ? r.comments : [],
     isSeed: Boolean(r.is_seed),
+    owner: Boolean(uid && r.user_id === uid),
     createdAt: Number(r.created_at) || 0,
   };
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   if (!sql) return json({ ok: true, posts: [] }, 200);
+  const token = extractToken(req.headers.get("cookie"));
+  const user = token ? await verifyToken(token) : null;
   try {
     const rows =
       await sql`select * from posts order by created_at desc limit 200`;
-    return json({ ok: true, posts: rows.map(mapPost) }, 200);
+    return json(
+      { ok: true, posts: rows.map((r) => mapPost(r, user?.uid)) },
+      200
+    );
   } catch (e) {
     console.error("posts get error:", e);
     return json({ ok: false, error: "获取帖子失败" }, 500);
@@ -93,5 +100,26 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("posts post error:", e);
     return json({ ok: false, error: "发帖失败" }, 500);
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const user = await currentUser(req);
+  if (!user) return json({ ok: false, error: "请先登录" }, 401);
+  if (!sql) return json({ ok: false, error: "数据库未配置" }, 503);
+
+  const id = req.nextUrl.searchParams.get("id") ?? "";
+  if (!id) return json({ ok: false, error: "缺少 id" }, 400);
+
+  try {
+    const res =
+      await sql`delete from posts where id = ${id} and user_id = ${user.uid}`;
+    if (res.count === 0) {
+      return json({ ok: false, error: "帖子不存在或无权删除" }, 404);
+    }
+    return json({ ok: true }, 200);
+  } catch (e) {
+    console.error("posts delete error:", e);
+    return json({ ok: false, error: "删除失败" }, 500);
   }
 }

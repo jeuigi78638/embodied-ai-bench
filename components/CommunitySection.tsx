@@ -7,6 +7,7 @@ import {
   savePosts,
   loadCloudPosts,
   saveCloudPost,
+  deleteCloudPost,
   genId,
   demoSummarize,
   type Post,
@@ -310,6 +311,20 @@ export default function CommunitySection() {
     persist(posts.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, c] } : p)));
   };
 
+  const removePost = async (id: string) => {
+    const target = posts.find((p) => p.id === id);
+    if (!target) return;
+    if (!window.confirm(`确定删除话题「${target.title}」吗？删除后不可恢复。`)) return;
+    if (user && !target.isSeed) {
+      const ok = await deleteCloudPost(id);
+      if (!ok) {
+        window.alert("删除失败，请检查登录状态后重试。");
+        return;
+      }
+    }
+    setPosts(posts.filter((p) => p.id !== id));
+  };
+
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -474,6 +489,20 @@ export default function CommunitySection() {
                       </svg>
                       {p.comments.length}
                     </span>
+                    {user && p.owner && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void removePost(p.id);
+                        }}
+                        className="ml-1 flex items-center gap-1 text-slate-600 transition hover:text-rose-400"
+                        title="删除话题"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
 
                   {open && (

@@ -41,6 +41,7 @@ export interface Post {
   liked: boolean; // 当前用户是否已点赞
   aiSummary?: string; // AI 生成摘要（可选）
   isSeed?: boolean; // 种子演示数据标记
+  owner?: boolean; // 云端标记：是否是当前登录用户发布的帖子
   comments: Comment[];
 }
 
@@ -306,6 +307,7 @@ interface CloudPost {
   likes: string[];
   comments: Comment[];
   isSeed?: boolean;
+  owner?: boolean;
   createdAt: number;
 }
 
@@ -324,6 +326,7 @@ function fromCloud(p: CloudPost): Post {
     liked: false,
     aiSummary: p.aiSummary,
     isSeed: Boolean(p.isSeed),
+    owner: Boolean(p.owner),
     comments: Array.isArray(p.comments) ? p.comments : [],
   };
 }
@@ -363,6 +366,19 @@ export async function saveCloudPost(post: Post): Promise<boolean> {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+    });
+    const j = await res.json();
+    return Boolean(j?.ok);
+  } catch {
+    return false;
+  }
+}
+
+/** 删除自己的云端帖子（仅作者本人，后端校验） */
+export async function deleteCloudPost(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/posts?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
     });
     const j = await res.json();
     return Boolean(j?.ok);
