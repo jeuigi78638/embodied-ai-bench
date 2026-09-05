@@ -25,8 +25,11 @@ export default function Footer() {
             )}
           </div>
         </div>
-        <div className="mt-6 border-t border-bg-border/60 pt-4 text-[11px] text-slate-600">
-          © {new Date().getFullYear()} EAI-Bench · 用 Next.js + Edge Function 构建 · 开源可部署
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-bg-border/60 pt-4 text-[11px] text-slate-600">
+          <span>© {new Date().getFullYear()} EAI-Bench · 用 Next.js + Edge Function 构建 · 开源可部署</span>
+          <a href="/privacy" className="transition hover:text-accent-soft">
+            隐私政策
+          </a>
         </div>
       </div>
     </footer>

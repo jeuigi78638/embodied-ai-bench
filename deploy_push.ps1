@@ -60,7 +60,7 @@ $treeBody = @{ base_tree = $baseTreeSha; tree = @($blobs) } | ConvertTo-Json -De
 $tree = Invoke-RestMethod -Uri "$base/git/trees" -Headers $headers -Method Post -Body $treeBody -ContentType "application/json"
 Write-Output ("TREE=" + $tree.sha)
 
-$commitBody = @{ message = "feat: posts DELETE API (owner-only) + community delete button"; parents = @($headCommitSha); tree = $tree.sha } | ConvertTo-Json -Depth 4 -Compress
+$commitBody = @{ message = "feat: privacy policy page + footer link"; parents = @($headCommitSha); tree = $tree.sha } | ConvertTo-Json -Depth 4 -Compress
 $commit = Invoke-RestMethod -Uri "$base/git/commits" -Headers $headers -Method Post -Body $commitBody -ContentType "application/json"
 Write-Output ("COMMIT=" + $commit.sha)
 
