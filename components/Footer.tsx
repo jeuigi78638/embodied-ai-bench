@@ -30,6 +30,9 @@ export default function Footer() {
           <a href="/privacy" className="transition hover:text-accent-soft">
             隐私政策
           </a>
+          <a href="/terms" className="transition hover:text-accent-soft">
+            用户协议
+          </a>
         </div>
       </div>
     </footer>
