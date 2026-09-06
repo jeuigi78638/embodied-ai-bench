@@ -43,3 +43,30 @@ create table if not exists posts (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_posts_created on posts (created_at desc);
+
+-- ============================================================
+-- 盲测对战：votes（对局记录）+ leaderboard（Elo 排行）
+-- ============================================================
+create table if not exists votes (
+  id text primary key,
+  prompt text not null,
+  category text not null default '通用',
+  model_a text not null,
+  model_b text not null,
+  winner text not null check (winner in ('a','b','tie')),
+  user_id uuid references users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_votes_created on votes (created_at desc);
+create index if not exists idx_votes_category on votes (category);
+
+create table if not exists leaderboard (
+  model text primary key,
+  elo real not null default 1500,
+  wins int not null default 0,
+  losses int not null default 0,
+  ties int not null default 0,
+  matches int not null default 0,
+  updated_at timestamptz not null default now()
+);
+

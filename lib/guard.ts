@@ -10,7 +10,7 @@
 //       作为第一道防线足够；更强的一致限流可后续接 Upstash / Vercel KV。
 // ============================================================
 
-export type GuardKind = "compare" | "benchmark";
+export type GuardKind = "compare" | "benchmark" | "battle";
 
 // ---- 1. 来源白名单（Host / Origin）----
 const ALLOWED_HOSTS = new Set([
@@ -47,6 +47,10 @@ const LIMITS: Record<GuardKind, { perMin: number; perDay: number }> = {
   benchmark: {
     perMin: envInt("RL_BENCH_PER_MIN", 3),
     perDay: envInt("RL_BENCH_PER_DAY", 30),
+  },
+  battle: {
+    perMin: envInt("RL_BATTLE_PER_MIN", 6),
+    perDay: envInt("RL_BATTLE_PER_DAY", 120),
   },
 };
 

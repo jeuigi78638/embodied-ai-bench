@@ -6,6 +6,7 @@ import AuthModal from "./AuthModal";
 
 const NAV = [
   { href: "#workbench", label: "对比工作台" },
+  { href: "#arena", label: "对战竞技场" },
   { href: "#benchmark", label: "自助测评" },
   { href: "#radar", label: "选型雷达" },
   { href: "#decision", label: "选型决策" },

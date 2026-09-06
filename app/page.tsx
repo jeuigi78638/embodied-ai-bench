@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import CompareWorkbench from "@/components/CompareWorkbench";
+import BattleArena from "@/components/BattleArena";
 import BenchmarkSection from "@/components/BenchmarkSection";
 import RadarSection from "@/components/RadarSection";
 import DecisionHelper from "@/components/DecisionHelper";
@@ -16,6 +17,10 @@ export default function Home() {
       <Header />
       <Hero />
       <CompareWorkbench />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-bg-border to-transparent" />
+      </div>
+      <BattleArena />
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-bg-border to-transparent" />
       </div>
