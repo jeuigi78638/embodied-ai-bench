@@ -25,10 +25,11 @@ export async function GET(req: NextRequest) {
 
   try {
     // 2) 总量
-    const [u, r, p] = await Promise.all([
+    const [u, r, p, v] = await Promise.all([
       sql`select count(*)::int as n from users`,
       sql`select count(*)::int as n from robots`,
       sql`select count(*)::int as n from posts`,
+      sql`select count(*)::int as n from votes`,
     ]);
 
     // 3) 近 7 天注册趋势（数据库侧按 UTC 日期分组）
@@ -51,12 +52,15 @@ export async function GET(req: NextRequest) {
       from posts order by created_at desc limit 5
     `;
 
-    // 6) 机器人角色分布 / 帖子分类分布
+    // 6) 机器人角色分布 / 帖子分类分布 / 盲测榜单摘要
     const roles = await sql`
       select role, count(*)::int as n from robots group by role order by n desc
     `;
     const cats = await sql`
       select category, count(*)::int as n from posts group by category order by n desc
+    `;
+    const lbTop = await sql`
+      select model, elo, matches from leaderboard order by elo desc limit 5
     `;
 
     // 7) 补齐 7 天序列
@@ -77,12 +81,14 @@ export async function GET(req: NextRequest) {
         users: u[0].n,
         robots: r[0].n,
         posts: p[0].n,
+        votes: v[0].n,
       },
       trend7: days,
       latestUsers,
       latestPosts,
       roleDist: roles,
       catDist: cats,
+      lbTop,
     });
   } catch (e) {
     console.error("[admin/stats]", e);

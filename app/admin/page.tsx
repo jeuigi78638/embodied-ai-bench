@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 interface Stats {
-  counts: { users: number; robots: number; posts: number };
+  counts: { users: number; robots: number; posts: number; votes: number };
   trend7: { d: string; n: number }[];
   latestUsers: { email: string; nickname: string; created_at: string }[];
   latestPosts: {
@@ -15,6 +15,7 @@ interface Stats {
   }[];
   roleDist: { role: string; n: number }[];
   catDist: { category: string; n: number }[];
+  lbTop: { model: string; elo: number; matches: number }[];
 }
 
 function maskEmail(email: string): string {
@@ -172,9 +173,10 @@ export default function AdminPage() {
         </div>
 
         {/* 统计卡片 */}
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {[
             { label: "注册用户", value: data!.counts.users, hint: "累计" },
+            { label: "盲测投票", value: data!.counts.votes, hint: "累计" },
             { label: "云端机器人", value: data!.counts.robots, hint: "累计" },
             { label: "社区帖子", value: data!.counts.posts, hint: "累计" },
             { label: "近 7 日新增", value: newUsers7, hint: "用户" },
@@ -233,6 +235,25 @@ export default function AdminPage() {
                     <div key={c.category} className="flex items-center justify-between text-[12px]">
                       <span className="text-slate-400">{c.category}</span>
                       <span className="font-medium text-slate-200">{c.n}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="panel p-5">
+              <h2 className="text-[14px] font-semibold text-slate-100">盲测 Elo 榜 Top5</h2>
+              {data!.lbTop.length === 0 ? (
+                <p className="mt-3 text-[12px] text-slate-600">暂无对战数据</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {data!.lbTop.map((m, i) => (
+                    <div key={m.model} className="flex items-center justify-between text-[12px]">
+                      <span className="text-slate-400">
+                        {i + 1}. {m.model}
+                      </span>
+                      <span className="text-slate-200">
+                        Elo {m.elo} · {m.matches} 场
+                      </span>
                     </div>
                   ))}
                 </div>
