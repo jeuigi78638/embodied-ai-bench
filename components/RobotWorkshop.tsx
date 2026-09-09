@@ -19,6 +19,7 @@ import {
   deleteCloudRobot,
 } from "@/lib/robots";
 import { useAuth } from "./AuthContext";
+import AiBadge from "./AiBadge";
 import Markdown from "./Markdown";
 
 const AVATARS = ["🤖", "🦾", "🛠", "🧠", "🔬", "🛰", "🤝", "⚙️"];
@@ -30,7 +31,7 @@ interface Msg {
 }
 
 export default function RobotWorkshop() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, promptLogin } = useAuth();
   const [view, setView] = useState<View>("list");
   const [robots, setRobots] = useState<Robot[]>(() => loadRobots());
 
@@ -170,6 +171,11 @@ export default function RobotWorkshop() {
   const send = async () => {
     const text = input.trim();
     if (!text || busy || !chatRobot) return;
+    // 生成式 AI 服务：真实模式要求登录后使用
+    if (!user) {
+      promptLogin();
+      return;
+    }
     setInput("");
     setMsgs((prev) => [...prev, { role: "user", text }]);
     setBusy(true);
@@ -572,7 +578,12 @@ export default function RobotWorkshop() {
                     }`}
                   >
                     {m.role === "bot" ? (
-                      <Markdown text={m.text} />
+                      <div>
+                        <div className="mb-1 flex justify-end">
+                          <AiBadge compact />
+                        </div>
+                        <Markdown text={m.text} />
+                      </div>
                     ) : (
                       m.text
                     )}

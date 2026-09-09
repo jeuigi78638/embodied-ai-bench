@@ -113,13 +113,23 @@ export async function POST(req: Request) {
 
   summary.sort((a, b) => b.avg - a.avg);
 
-  return json({ results, summary, taskCount: tasks.length }, 200);
+  return json({ results, summary, taskCount: tasks.length }, 200, {
+    // 隐式标识：AI 生成内容元数据标识
+    "x-ai-generated": "true",
+  });
 }
 
-function json(data: unknown, status: number) {
+function json(
+  data: unknown,
+  status: number,
+  extraHeaders?: Record<string, string>
+) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8" },
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      ...(extraHeaders ?? {}),
+    },
   });
 }
 

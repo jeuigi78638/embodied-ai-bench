@@ -18,6 +18,9 @@ export interface User {
 interface AuthCtx {
   user: User | null;
   loading: boolean;
+  authPrompt: boolean;
+  promptLogin: () => void;
+  dismissAuth: () => void;
   login: (email: string, password: string) => Promise<string | null>;
   register: (
     email: string,
@@ -32,6 +35,9 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>({
   user: null,
   loading: true,
+  authPrompt: false,
+  promptLogin: () => {},
+  dismissAuth: () => {},
   login: async () => null,
   register: async () => null,
   logout: async () => {},
@@ -42,6 +48,10 @@ const Ctx = createContext<AuthCtx>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authPrompt, setAuthPrompt] = useState(false);
+
+  const promptLogin = useCallback(() => setAuthPrompt(true), []);
+  const dismissAuth = useCallback(() => setAuthPrompt(false), []);
 
   const refresh = useCallback(async () => {
     try {
@@ -105,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ user, loading, login, register, logout, refresh, setUser }}
+      value={{ user, loading, authPrompt, promptLogin, dismissAuth, login, register, logout, refresh, setUser }}
     >
       {children}
     </Ctx.Provider>

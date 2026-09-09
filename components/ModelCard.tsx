@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { ModelConfig } from "@/lib/models";
 import Markdown from "./Markdown";
+import AiBadge from "./AiBadge";
 
 export type CardStatus = "idle" | "streaming" | "done" | "error";
 
@@ -100,9 +101,14 @@ export default function ModelCard({ config, state, onClear }: Props) {
           </div>
         )}
         {text.length > 0 && (
-          <div className={streaming ? "cursor-blink" : ""}>
-            <Markdown text={text} />
-          </div>
+          <>
+            <div className="mb-2">
+              <AiBadge compact />
+            </div>
+            <div className={streaming ? "cursor-blink" : ""}>
+              <Markdown text={text} />
+            </div>
+          </>
         )}
       </div>
 

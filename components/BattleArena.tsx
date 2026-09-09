@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MODELS, MODEL_MAP, TASK_TEMPLATES } from "@/lib/models";
 import { getUserKeys } from "@/lib/userkeys";
+import AiBadge from "./AiBadge";
 
 type Step = "setup" | "running" | "voting" | "voted";
 
@@ -334,8 +335,13 @@ export default function BattleArena() {
                         }`}
                       />
                     </div>
-                    <div className="mt-3 flex-1 whitespace-pre-wrap text-[12px] leading-relaxed text-slate-300">
-                      {text || (step === "running" ? "思考中…" : "")}
+                    <div className="mt-3 flex-1">
+                      <div className="mb-1.5">
+                        <AiBadge compact />
+                      </div>
+                      <div className="whitespace-pre-wrap text-[12px] leading-relaxed text-slate-300">
+                        {text || (step === "running" ? "思考中…" : "")}
+                      </div>
                     </div>
                   </div>
                 );

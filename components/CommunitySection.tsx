@@ -5,19 +5,14 @@ import {
   CATEGORIES,
   loadPosts,
   savePosts,
-  loadCloudPosts,
-  saveCloudPost,
-  deleteCloudPost,
-  genId,
-  demoSummarize,
   type Post,
-  type Comment,
   type TopicCategory,
 } from "@/lib/community";
 import { MODEL_MAP } from "@/lib/models";
 import { buildDemoAnswer } from "@/lib/demo";
 import { getUserKeys } from "@/lib/userkeys";
 import { useAuth } from "./AuthContext";
+import AiBadge from "./AiBadge";
 import Markdown from "./Markdown";
 
 const CAT_STYLE: Record<TopicCategory, string> = {
@@ -115,6 +110,7 @@ interface AiPanelProps {
 }
 
 function AiPanel({ onClose }: AiPanelProps) {
+  const { user, promptLogin } = useAuth();
   const [q, setQ] = useState("");
   const [ans, setAns] = useState("");
   const [busy, setBusy] = useState(false);
@@ -124,6 +120,11 @@ function AiPanel({ onClose }: AiPanelProps) {
   const ask = async () => {
     const text = q.trim();
     if (!text || busy) return;
+    // 生成式 AI 服务：要求登录后使用
+    if (!user) {
+      promptLogin();
+      return;
+    }
     setBusy(true);
     setErr(null);
     setAns("");
@@ -215,6 +216,7 @@ function AiPanel({ onClose }: AiPanelProps) {
       )}
       {ans && (
         <div className="mt-3 max-h-96 overflow-y-auto rounded-xl border border-bg-border bg-bg-soft/30 p-3">
+          <AiBadge />
           {real ? (
             <Markdown text={ans} />
           ) : (
@@ -233,46 +235,21 @@ export default function CommunitySection() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [activeCat, setActiveCat] = useState<TopicCategory | "全部">("全部");
-  const [showComposer, setShowComposer] = useState(false);
   const [showAi, setShowAi] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
-    if (user) {
-      // 登录：云端帖子 + 本地种子合并
-      Promise.all([loadCloudPosts(), Promise.resolve(loadPosts())]).then(
-        ([cloud, local]) => {
-          if (cancelled) return;
-          if (cloud && cloud.length > 0) {
-            const seeds = local.filter((p) => p.isSeed);
-            const cloudIds = new Set(cloud.map((p) => p.id));
-            setPosts([...cloud, ...seeds.filter((p) => !cloudIds.has(p.id))]);
-          } else {
-            setPosts(local);
-          }
-        }
-      );
-    } else {
-      setPosts(loadPosts());
-    }
+    // 只读社区：仅展示站方精选内容（种子话题 + 本地话题）
+    setPosts(loadPosts());
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, []);
 
   const persist = (next: Post[]) => {
     setPosts(next);
-    if (user) {
-      // 登录：非种子帖子全部上云（新建/点赞/评论都全量同步）
-      next
-        .filter((p) => !p.isSeed)
-        .forEach((p) => {
-          void saveCloudPost(p);
-        });
-    } else {
-      savePosts(next);
-    }
+    savePosts(next);
   };
 
   const toggleLike = (id: string) => {
@@ -281,48 +258,6 @@ export default function CommunitySection() {
         p.id === id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p
       )
     );
-  };
-
-  const publish = (title: string, cat: TopicCategory, content: string) => {
-    const p: Post = {
-      id: genId(),
-      title,
-      content,
-      category: cat,
-      author: user?.nickname || "我",
-      createdAt: Date.now(),
-      likes: 0,
-      liked: false,
-      aiSummary: demoSummarize(title, content),
-      comments: [],
-    };
-    persist([p, ...posts]);
-    setShowComposer(false);
-    setExpanded((prev) => new Set(prev).add(p.id));
-  };
-
-  const addComment = (postId: string, text: string) => {
-    const c: Comment = {
-      id: genId(),
-      author: user?.nickname || "我",
-      content: text,
-      createdAt: Date.now(),
-    };
-    persist(posts.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, c] } : p)));
-  };
-
-  const removePost = async (id: string) => {
-    const target = posts.find((p) => p.id === id);
-    if (!target) return;
-    if (!window.confirm(`确定删除话题「${target.title}」吗？删除后不可恢复。`)) return;
-    if (user && !target.isSeed) {
-      const ok = await deleteCloudPost(id);
-      if (!ok) {
-        window.alert("删除失败，请检查登录状态后重试。");
-        return;
-      }
-    }
-    setPosts(posts.filter((p) => p.id !== id));
   };
 
   const toggleExpand = (id: string) => {
@@ -352,18 +287,11 @@ export default function CommunitySection() {
             ⑥ 机器人讨论区
           </h2>
           <p className="mt-1 text-[13px] text-slate-500">
-            具身智能 × 机器人大众社区：行业动态、技术问答、产品讨论、学习求职，随时开聊。
-            {user ? (
-              <span className="text-emerald-400/90">
-                {" "}
-                已登录 · 帖子云端同步，换设备不丢失
-              </span>
-            ) : (
-              <span className="text-amber-400/90">
-                {" "}
-                未登录 · 数据存于本浏览器（登录后云端同步）
-              </span>
-            )}
+            具身智能 × 机器人精选内容展示区：行业动态、技术问答、产品讨论、学习求职。
+            <span className="text-amber-400/90">
+              {" "}
+              当前为只读模式（站方精选内容），社区开放发帖功能正在规划中。
+            </span>
           </p>
         </div>
 
@@ -395,33 +323,23 @@ export default function CommunitySection() {
             >
               ✦ AI 机器人助手
             </button>
-            <button
-              onClick={() => setShowComposer((v) => !v)}
-              className={`rounded-lg px-3.5 py-1.5 text-[12px] font-semibold transition ${
-                showComposer
-                  ? "bg-slate-800 text-slate-400"
-                  : "bg-accent text-black shadow-glow-sm hover:bg-accent-soft"
-              }`}
+            <span
+              className="rounded-full border border-bg-border px-3 py-1.5 text-[11px] text-slate-500"
+              title="社区当前为站方精选内容的只读展示模式"
             >
-              + 发帖
-            </button>
+              📖 只读社区
+            </span>
           </div>
         </div>
 
         {showAi && <AiPanel onClose={() => setShowAi(false)} />}
-        {showComposer && (
-          <Composer
-            onClose={() => setShowComposer(false)}
-            onPublish={publish}
-          />
-        )}
 
         <div className="grid gap-4 lg:grid-cols-3">
           {/* 帖子列表 */}
           <div className="space-y-3 lg:col-span-2">
             {filtered.length === 0 && (
               <div className="panel p-8 text-center text-[13px] text-slate-500">
-                该分类下还没有话题，点击「+ 发帖」开个头吧。
+                该分类下暂无内容，站方正在精选补充中。
               </div>
             )}
             {filtered.map((p) => {
@@ -489,20 +407,6 @@ export default function CommunitySection() {
                       </svg>
                       {p.comments.length}
                     </span>
-                    {user && p.owner && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void removePost(p.id);
-                        }}
-                        className="ml-1 flex items-center gap-1 text-slate-600 transition hover:text-rose-400"
-                        title="删除话题"
-                      >
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    )}
                   </div>
 
                   {open && (
@@ -513,10 +417,12 @@ export default function CommunitySection() {
                         </div>
                       </div>
 
-                      {/* 评论 */}
+                      {/* 评论（只读展示） */}
                       <div className="space-y-2 border-t border-bg-border/60 px-4 py-3">
                         {p.comments.length === 0 && (
-                          <div className="text-[12px] text-slate-600">还没有评论，来说两句。</div>
+                          <div className="text-[12px] text-slate-600">
+                            暂无评论 · 评论功能随社区开放后启用
+                          </div>
                         )}
                         {p.comments.map((c) => (
                           <div key={c.id} className="rounded-xl border border-bg-border/70 bg-bg/40 px-3 py-2">
@@ -530,7 +436,6 @@ export default function CommunitySection() {
                             <div className="whitespace-pre-wrap text-[13px] text-slate-300">{c.content}</div>
                           </div>
                         ))}
-                        <CommentBox onAdd={(t) => addComment(p.id, t)} />
                       </div>
                     </div>
                   )}
@@ -582,37 +487,5 @@ export default function CommunitySection() {
         </div>
       </div>
     </section>
-  );
-}
-
-function CommentBox({ onAdd }: { onAdd: (text: string) => void }) {
-  const [text, setText] = useState("");
-  const submit = () => {
-    const t = text.trim();
-    if (!t) return;
-    onAdd(t);
-    setText("");
-  };
-  return (
-    <div className="flex gap-2 pt-1">
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit()}
-        placeholder="写下你的看法…"
-        className="flex-1 rounded-lg border border-bg-border bg-bg/50 px-3 py-1.5 text-[12.5px] text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-accent/50"
-      />
-      <button
-        onClick={submit}
-        disabled={!text.trim()}
-        className={`shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-medium transition ${
-          text.trim()
-            ? "bg-accent/90 text-black hover:bg-accent-soft"
-            : "cursor-not-allowed bg-slate-800 text-slate-600"
-        }`}
-      >
-        评论
-      </button>
-    </div>
   );
 }

@@ -8,7 +8,7 @@
 import { NextRequest } from "next/server";
 import { sql } from "@/lib/db";
 import { extractToken, verifyToken } from "@/lib/auth";
-import { json, tryJson } from "@/lib/api";
+import { json } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -53,73 +53,18 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await currentUser(req);
-  if (!user) return json({ ok: false, error: "请先登录后再发帖" }, 401);
-  if (!sql) return json({ ok: false, error: "数据库未配置" }, 503);
-
-  const body = (await tryJson(req)) as Record<string, unknown> | null;
-  if (!body) return json({ ok: false, error: "请求体不是合法 JSON" }, 400);
-
-  const id = typeof body.id === "string" ? body.id.trim() : "";
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  const category =
-    typeof body.category === "string" ? body.category : "自由闲聊";
-  const content = typeof body.content === "string" ? body.content : "";
-  const author = typeof body.author === "string" ? body.author.slice(0, 40) : user.nickname || "机器人玩家";
-  const avatar = typeof body.avatar === "string" ? body.avatar.slice(0, 8) : "🤖";
-  const aiSummary = typeof body.aiSummary === "string" ? body.aiSummary.slice(0, 500) : "";
-  const likes = Array.isArray(body.likes)
-    ? body.likes.filter((x): x is string => typeof x === "string").slice(0, 500)
-    : [];
-  const comments = Array.isArray(body.comments)
-    ? body.comments.slice(0, 200)
-    : [];
-  const createdAt = typeof body.createdAt === "number" ? body.createdAt : Date.now();
-
-  if (!id || !title) return json({ ok: false, error: "缺少帖子 id 或标题" }, 400);
-  if (!/^[A-Za-z0-9_\-]{4,40}$/.test(id)) {
-    return json({ ok: false, error: "帖子 id 不合法" }, 400);
-  }
-
-  try {
-    const rows =
-      await sql`insert into posts (id, user_id, title, category, content, author, avatar, ai_summary, likes, comments, is_seed, created_at)
-      values (${id}, ${user.uid}, ${title}, ${category}, ${content}, ${author}, ${avatar}, ${aiSummary}, ${likes}, ${comments}, false, ${createdAt})
-      on conflict (id) do update set
-        title = excluded.title,
-        category = excluded.category,
-        content = excluded.content,
-        author = excluded.author,
-        avatar = excluded.avatar,
-        ai_summary = excluded.ai_summary,
-        likes = excluded.likes,
-        comments = excluded.comments,
-        updated_at = now()
-      returning *`;
-    return json({ ok: true, post: mapPost(rows[0]) }, 200);
-  } catch (e) {
-    console.error("posts post error:", e);
-    return json({ ok: false, error: "发帖失败" }, 500);
-  }
+  // 合规调整：社区调整为只读展示模式（站方发布精选内容），
+  // 关闭用户公开发帖/修改接口，避免平台级用户生成内容的传播管理义务。
+  return json(
+    { ok: false, error: "社区已调整为只读展示模式，暂不支持发布新话题" },
+    403
+  );
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await currentUser(req);
-  if (!user) return json({ ok: false, error: "请先登录" }, 401);
-  if (!sql) return json({ ok: false, error: "数据库未配置" }, 503);
-
-  const id = req.nextUrl.searchParams.get("id") ?? "";
-  if (!id) return json({ ok: false, error: "缺少 id" }, 400);
-
-  try {
-    const res =
-      await sql`delete from posts where id = ${id} and user_id = ${user.uid}`;
-    if (res.count === 0) {
-      return json({ ok: false, error: "帖子不存在或无权删除" }, 404);
-    }
-    return json({ ok: true }, 200);
-  } catch (e) {
-    console.error("posts delete error:", e);
-    return json({ ok: false, error: "删除失败" }, 500);
-  }
+  // 合规调整：社区只读模式下不允许用户删除帖子
+  return json(
+    { ok: false, error: "社区已调整为只读展示模式，暂不支持删除操作" },
+    403
+  );
 }

@@ -8,6 +8,8 @@ import { buildDemoAnswer, demoLatency } from "@/lib/demo";
 import { setBenchRecord } from "@/lib/store";
 import { getUserKeys } from "@/lib/userkeys";
 import Markdown from "./Markdown";
+import AiBadge from "./AiBadge";
+import { useAuth } from "./AuthContext";
 
 interface AnswerItem {
   model: string;
@@ -35,6 +37,7 @@ function dimScore(total: number): { label: string; color: string } {
 }
 
 export default function BenchmarkSection() {
+  const { user, promptLogin } = useAuth();
   const [prompt, setPrompt] = useState(BENCHMARK_TASKS[0].prompt);
   const [models, setModels] = useState<Set<string>>(
     () => new Set(["deepseek", "doubao", "qwen"])
@@ -65,6 +68,11 @@ export default function BenchmarkSection() {
   const run = async () => {
     if (!prompt.trim()) return setError("请先描述你的机器人任务（①）。");
     if (models.size === 0) return setError("请至少选择一个模型（②）。");
+    // 生成式 AI 服务：真实模式要求登录后使用
+    if (!demo && !user) {
+      promptLogin();
+      return;
+    }
     setError(null);
     setRunning(true);
     setAnswers(null);
@@ -350,9 +358,14 @@ export default function BenchmarkSection() {
                           {a.error}
                         </div>
                       ) : (
-                        <div className={`${open ? "" : "max-h-52 overflow-hidden"}`}>
-                          <Markdown text={a.text} />
-                        </div>
+                        <>
+                          <div className="mb-1.5">
+                            <AiBadge compact />
+                          </div>
+                          <div className={`${open ? "" : "max-h-52 overflow-hidden"}`}>
+                            <Markdown text={a.text} />
+                          </div>
+                        </>
                       )}
                     </div>
                     {!a.error && (

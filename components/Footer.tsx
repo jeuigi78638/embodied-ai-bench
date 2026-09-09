@@ -14,6 +14,14 @@ export default function Footer() {
               <b className="text-amber-400">真实机器人部署前必须经过人工安全评审</b>。
               各模型价格为参考价，请以官方定价为准。
             </p>
+            <p className="mt-2 max-w-xl text-[11px] leading-relaxed text-violet-400/70">
+              ⚖️ 本站内容（含 AI 生成内容，均带「AI 生成」标识）仅供学习研究参考，
+              不构成专业结论；如发现违规或侵权内容，请联系
+              <a href="mailto:2845972368@qq.com" className="underline decoration-dotted underline-offset-2 transition hover:text-violet-300">
+                2845972368@qq.com
+              </a>{" "}
+              举报。
+            </p>
           </div>
           <div className="flex flex-wrap gap-2 text-[12px] text-slate-500">
             {["GPT-4o", "Claude", "豆包", "DeepSeek", "通义千问", "Gemini", "GLM-4"].map(

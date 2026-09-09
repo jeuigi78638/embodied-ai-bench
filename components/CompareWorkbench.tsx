@@ -13,12 +13,14 @@ import ModelCard, { type CardState } from "./ModelCard";
 import { streamDemo } from "@/lib/demo";
 import { setCompareRecord } from "@/lib/store";
 import { getUserKeys } from "@/lib/userkeys";
+import { useAuth } from "./AuthContext";
 
 type Filter = "all" | "国产" | "国际";
 
 const emptyCard: CardState = { text: "", status: "idle" };
 
 export default function CompareWorkbench() {
+  const { user, promptLogin } = useAuth();
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(["doubao", "deepseek", "qwen"])
   );
@@ -77,6 +79,11 @@ export default function CompareWorkbench() {
     }
     if (selected.size === 0) {
       alert("请至少勾选一个模型。");
+      return;
+    }
+    // 真实模式（非演示）为生成式 AI 服务：要求登录后再使用
+    if (!demo && !user) {
+      promptLogin();
       return;
     }
 

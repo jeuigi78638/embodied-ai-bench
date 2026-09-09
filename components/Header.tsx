@@ -18,7 +18,7 @@ const NAV = [
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, authPrompt, dismissAuth } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -133,7 +133,7 @@ export default function Header() {
         </div>
       </header>
 
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      <AuthModal open={showAuth || authPrompt} onClose={() => { setShowAuth(false); dismissAuth(); }} />
     </>
   );
 }

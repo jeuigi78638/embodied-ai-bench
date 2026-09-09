@@ -77,6 +77,8 @@ export async function POST(req: Request) {
       "cache-control": "no-cache, no-transform",
       connection: "keep-alive",
       "x-accel-buffering": "no",
+      // 隐式标识：《人工智能生成合成内容标识办法》要求生成内容附带元数据标识
+      "x-ai-generated": "true",
     },
   });
 }
