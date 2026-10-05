@@ -60,7 +60,7 @@ $treeBody = @{ base_tree = $baseTreeSha; tree = @($blobs) } | ConvertTo-Json -De
 $tree = Invoke-RestMethod -Uri "$base/git/trees" -Headers $headers -Method Post -Body $treeBody -ContentType "application/json"
 Write-Output ("TREE=" + $tree.sha)
 
-$commitBody = @{ message = "chore: compliance - read-only community, AI content labels, login gate for generation, footer notices"; parents = @($headCommitSha); tree = $tree.sha } | ConvertTo-Json -Depth 4 -Compress
+$commitBody = @{ message = "feat: feature vote section - 6 categories x 30 robot capabilities, one vote per user/IP, live tally board"; parents = @($headCommitSha); tree = $tree.sha } | ConvertTo-Json -Depth 4 -Compress
 $commit = Invoke-RestMethod -Uri "$base/git/commits" -Headers $headers -Method Post -Body $commitBody -ContentType "application/json"
 Write-Output ("COMMIT=" + $commit.sha)
 
