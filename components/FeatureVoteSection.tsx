@@ -113,7 +113,26 @@ export default function FeatureVoteSection() {
       </section>
     );
   }
-  if (!data) return null;
+  if (!data) {
+    // 首帧骨架：保证版块在 HTML 中存在（SEO/首屏），客户端挂载后 fetch 填充
+    return (
+      <section id="feature-vote" className="scroll-mt-20 py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-slate-100 sm:text-2xl">
+              ⑧ 功能需求投票
+            </h2>
+            <p className="mt-1 text-[13px] text-slate-500">
+              你希望未来的具身智能机器人具备哪些功能？按区域挑出你最想要的，你的选择将直接决定我们优先研发的方向。
+            </p>
+          </div>
+          <div className="panel p-6 text-center text-[12px] text-slate-500">
+            加载投票数据中…
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const rank = ranking();
   const sum = totalVotes();
